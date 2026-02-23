@@ -1,0 +1,35 @@
+# rumdl configuration file
+
+[global]
+
+include = [
+   "docs/*.md",
+   "src/**/*.md",
+   "README.md"
+]
+
+exclude = [
+    # Common directories to exclude
+    ".git",
+    ".github",
+    "dist",
+    "build",
+]
+
+# Respect .gitignore files when scanning directories (default: true)
+respect-gitignore = true
+
+[MD004]
+style = "sublist" # Each nesting level uses a different marker (cycles through *, +, -)
+
+[MD013]
+line-length = 80  # Line length
+code-blocks = false  # Exclude code blocks from line length check
+tables = false  # Exclude tables from line length check
+headings = true  # Include headings in line length check
+paragraphs = true  # Check paragraph/regular text (default: true)
+strict = false  # Disables exceptions for URLs, etc. (default: false)
+reflow = true  # Enable automatic text reflow/wrapping (default: false)
+reflow-mode = "default"
+length-mode = "visual"
+abbreviations = []  # Add custom abbreviations for sentence-per-line mode

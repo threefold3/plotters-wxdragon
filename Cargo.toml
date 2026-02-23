@@ -1,0 +1,13 @@
+[package]
+name = "plotters-wxdragon"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+thiserror = "1"
+# See https://docs.rs/plotters-backend/latest/plotters_backend/#compatibility-note
+plotters-backend = "^0.3"
+wxdragon = "0.9"
+
+[dev-dependencies]
+plotters = "^0.3"
