@@ -239,35 +239,43 @@ where
     ) -> Result<(), plotters_backend::DrawingErrorKind<Self::ErrorType>> {
         // this also sets the font style
         let (width, height) = self.estimate_text_size(text, style)?;
+        let width = width as i32;
+        let height = height as i32;
         let (x, y) = pos;
+
+        // plotters convention is that anchor position is relative to
+        // character's point of view
+        let Pos { h_pos, v_pos } = style.anchor();
+        let dx = match h_pos {
+            HPos::Left => 0,
+            HPos::Center => -width / 2,
+            HPos::Right => -width,
+        };
+        let dy = match v_pos {
+            VPos::Top => 0,
+            VPos::Center => -height / 2,
+            VPos::Bottom => -height,
+        };
+        let (dx, dy) = match style.transform() {
+            FontTransform::None => (dx, dy),
+            FontTransform::Rotate90 => (-dy, dx),
+            FontTransform::Rotate180 => (-dx, -dy),
+            FontTransform::Rotate270 => (dy, -dx),
+        };
+
+        // plotters rotates clockwise, wxwidgets rotates counterclockwise
         let angle = match style.transform() {
             FontTransform::None => None,
-            FontTransform::Rotate90 => Some(90.0),
-            FontTransform::Rotate180 => Some(180.0),
-            FontTransform::Rotate270 => Some(270.0),
-        };
-        let Pos { h_pos, v_pos } = style.anchor();
-        let alignment = match h_pos {
-            HPos::Left => wx::dc::TextAlignment::LEFT,
-            HPos::Center => wx::dc::TextAlignment::CENTER_HORIZONTAL,
-            HPos::Right => wx::dc::TextAlignment::RIGHT,
-        } | match v_pos {
-            VPos::Bottom => wx::dc::TextAlignment::BOTTOM,
-            VPos::Center => wx::dc::TextAlignment::CENTER_VERTICAL,
-            VPos::Top => wx::dc::TextAlignment::TOP,
+            FontTransform::Rotate90 => Some(-90.0),
+            FontTransform::Rotate180 => Some(-180.0),
+            FontTransform::Rotate270 => Some(-270.0),
         };
         if let Some(angle) = angle {
-            // FIXME: cannot both rotate and align the text
             println!("draw_rotated_text({text}, {x}, {y}, {angle})");
-            self.context.draw_rotated_text(text, x, y, angle);
+            self.context.draw_rotated_text(text, x + dx, y + dy, angle);
         } else {
-            let index_accel = -1; // index of character to emphasize
-            let rect = wx::dc::Rect::new(x, y, width as i32, height as i32);
-            println!(
-                "draw_label({text}, {rect:?}, {alignment:?}, {index_accel})"
-            );
-            self.context.draw_label(text, rect, alignment, index_accel);
-            // self.context.draw_text(text, x, y);
+            println!("draw_text({text}, {x}, {y}");
+            self.context.draw_text(text, x + dx, y + dy);
         }
         Ok(())
     }
