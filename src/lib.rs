@@ -131,13 +131,10 @@ where
         color: plotters_backend::BackendColor,
     ) -> Result<(), plotters_backend::DrawingErrorKind<Self::ErrorType>> {
         let (x, y) = point;
-        let BackendColor { alpha, rgb } = color;
-        let (r, g, b) = rgb;
-        let colour = wx::Colour::new(r, g, b, alpha as u8);
+        let color = convert_color(color);
         let width = 1;
         let style = wx::PenStyle::Solid;
-        self.context.set_pen(colour, width, style);
-        println!("draw_point({x}, {y})");
+        self.context.set_pen(color, width, style);
         self.context.draw_point(x, y);
         Ok(())
     }
