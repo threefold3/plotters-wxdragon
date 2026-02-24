@@ -60,7 +60,10 @@ where
         self.context.set_text_background(WHITE); // FIXME
         let color = convert_color(style.color());
         self.context.set_text_foreground(color);
-        let point_size = style.size() as i32;
+        // FIXME: There is a discrepancy with font size compared to the
+        // BitmapBackend. For now using a coeficient 0.6. Note that in the
+        // tests of an off-screen wxBitmap, the dpi value is 96.
+        let point_size = (style.size() * 0.6) as i32;
         let (family, face_name) = match style.family() {
             // According to wx docs
             // https://docs.wxwidgets.org/3.2/interface_2wx_2font_8h.html
@@ -77,15 +80,18 @@ where
             FontStyle::Oblique => (Slant, wx::FontWeight::Normal),
         };
         let underlined = false;
-        let font = wx::dc::Font::new_with_details(
-            point_size,
-            family.as_i32(),
-            style.as_i32(),
-            weight.as_i32(),
-            underlined,
-            face_name,
-        )
-        .ok_or(ErrorInner::CreateFont)?;
+        let font = wx::Font::builder()
+            .with_point_size(point_size)
+            .with_family(family)
+            .with_style(style)
+            .with_weight(weight)
+            .with_underline(underlined)
+            // NOTE: wxdragon could be improved here. `with_face_name()`
+            // creates a string, and `build()` creates another string in its
+            // call to `wx::dc::Font::new_with_details()`.
+            .with_face_name(face_name)
+            .build()
+            .ok_or(ErrorInner::CreateFont)?;
         self.context.set_font(&font);
         Ok(())
     }
