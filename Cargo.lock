@@ -1697,6 +1697,7 @@ dependencies = [
 name = "plotters-wxdragon"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "image 0.25.9",
  "plotters",
  "plotters-backend",

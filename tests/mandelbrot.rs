@@ -2,36 +2,23 @@
 //!
 //! This tests the `draw_pixel()` method with a complex plot.
 
-use std::ops::Range;
-use std::process::exit;
+mod test_utils;
 
-use image::RgbaImage;
+use std::ops::Range;
+
+use anyhow::Result;
 use plotters::prelude::*;
 use plotters_wxdragon::WxBackend;
-use wxdragon::{self as wx, DeviceContext};
+use wxdragon::DeviceContext;
+
+use test_utils::run_plotters_image_test;
 
 #[test]
-fn test_mandelbrot() {
-    let _ = wx::main(|_| {
-        let width: u32 = 800;
-        let height: u32 = 600;
-        let mut bitmap = wx::Bitmap::new(width as i32, height as i32).unwrap();
-        let mut dc = wx::MemoryDC::new();
-        dc.select_object(&mut bitmap);
-        let backend = WxBackend::new(&dc);
-        draw_mandelbrot(backend).unwrap();
-        dc.select_object(&mut wx::Bitmap::null_bitmap());
-        let rgba_data = bitmap.get_rgba_data().unwrap();
-        assert_eq!(rgba_data.len(), (width * height * 4) as usize);
-        let image = RgbaImage::from_raw(width, height, rgba_data).unwrap();
-        image.save("tests/mandelbrot.png").unwrap();
-        exit(0)
-    });
+fn test_mandelbrot() -> Result<()> {
+    run_plotters_image_test(800, 600, "tests/mandelbrot", draw_mandelbrot)
 }
 
-fn draw_mandelbrot<C: DeviceContext>(
-    backend: WxBackend<C>,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn draw_mandelbrot<C: DeviceContext>(backend: WxBackend<C>) -> Result<()> {
     let root_area = backend.into_drawing_area();
 
     root_area.fill(&WHITE)?;
