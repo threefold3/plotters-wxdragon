@@ -33,7 +33,6 @@ where
         let width = style.stroke_width() as i32;
         // FIXME: how to get info of other styles?
         let style = wx::PenStyle::Solid;
-        println!("set_pen({color:?}, {width}, {style:?})");
         self.context.set_pen(color, width, style);
     }
 
@@ -48,7 +47,6 @@ where
             false => wx::BrushStyle::Transparent,
         };
         let color = convert_color(color);
-        println!("set_brush({color:?}, {style:?})");
         self.context.set_brush(color, style);
     }
 
@@ -117,17 +115,12 @@ where
     fn ensure_prepared(
         &mut self,
     ) -> Result<(), plotters_backend::DrawingErrorKind<Self::ErrorType>> {
-        // self.context.set_background(WHITE);
-        // self.context.set_background_mode(wx::BackgroundMode::Solid);
-        // self.context.clear();
-        println!("ensure_prepared()");
         Ok(())
     }
 
     fn present(
         &mut self,
     ) -> Result<(), plotters_backend::DrawingErrorKind<Self::ErrorType>> {
-        println!("present()");
         Ok(())
     }
 
@@ -154,7 +147,6 @@ where
         self.set_pen_style(style);
         let (x1, y1) = from;
         let (x2, y2) = to;
-        println!("draw_line({x1}, {y1}, {x2}, {y2})");
         self.context.draw_line(x1, y1, x2, y2);
         Ok(())
     }
@@ -174,7 +166,6 @@ where
             .collect();
         let x_offset = 0;
         let y_offset = 0;
-        println!("draw_lines({points:?}, {x_offset}, {y_offset})");
         self.context.draw_lines(&points[..], x_offset, y_offset);
         Ok(())
     }
@@ -189,7 +180,6 @@ where
         self.set_pen_style(style);
         self.set_brush_style(fill, style.color());
         let (x, y) = center;
-        println!("draw_circle({x}, {y}, {radius})");
         self.context.draw_circle(x, y, radius as i32);
         Ok(())
     }
@@ -207,7 +197,6 @@ where
         let (x2, y2) = bottom_right;
         let width = x2 - x1;
         let height = y2 - y1;
-        println!("draw_rectangle({x1}, {y1}, {width}, {height})");
         self.context.draw_rectangle(x1, y1, width, height);
         Ok(())
     }
@@ -229,9 +218,6 @@ where
         let x_offset = 0;
         let y_offset = 0;
         let fill_mode = wx::dc::PolygonFillMode::OddEven;
-        println!(
-            "draw_polygon({points:?}, {x_offset}, {y_offset}, {fill_mode:?})"
-        );
         self.context
             .draw_polygon(&points[..], x_offset, y_offset, fill_mode);
         Ok(())
@@ -277,10 +263,8 @@ where
             FontTransform::Rotate270 => Some(-270.0),
         };
         if let Some(angle) = angle {
-            println!("draw_rotated_text({text}, {x}, {y}, {angle})");
             self.context.draw_rotated_text(text, x + dx, y + dy, angle);
         } else {
-            println!("draw_text({text}, {x}, {y}");
             self.context.draw_text(text, x + dx, y + dy);
         }
         Ok(())
