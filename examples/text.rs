@@ -18,17 +18,29 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 // We leave the glob import of plotters so as not to change the example.
-use plotters::prelude::*;
+use plotters::{prelude::*, style::full_palette::LIME_200};
 use plotters_backend::text_anchor::{HPos, Pos, VPos};
 // No glob import for wxdragon to avoid conflicts, but an alias `wx`, and
 // import traits as needed.
 use plotters_wxdragon::WxBackend;
-use wxdragon::{self as wx, WindowEvents, WxWidget};
+use wxdragon::{self as wx, ButtonEvents, WindowEvents, WxWidget};
 
 /// Shared application state
 struct State {
     /// Current text transform (rotation)
     text_transform: FontTransform,
+
+    /// Current background mode for drawing
+    background_mode: wx::BackgroundMode,
+}
+
+impl State {
+    fn toggle_background_mode(&mut self) {
+        self.background_mode = match self.background_mode {
+            wx::BackgroundMode::Solid => wx::BackgroundMode::Transparent,
+            wx::BackgroundMode::Transparent => wx::BackgroundMode::Solid,
+        }
+    }
 }
 
 struct DrawingPanel {
@@ -37,15 +49,18 @@ struct DrawingPanel {
 
 impl DrawingPanel {
     fn new(parent: &wx::Frame, state: Rc<RefCell<State>>) -> Self {
-        let panel = wx::PanelBuilder::new(parent).build();
+        let panel = wx::PanelBuilder::new(parent)
+            .with_size(wx::Size::new(800, 600))
+            .build();
         panel.set_background_style(wx::BackgroundStyle::Paint);
 
         // Register the paint handler with a move closure
         panel.on_paint(move |_event| {
             let dc = wx::AutoBufferedPaintDC::new(&panel);
             let mut backend = WxBackend::new(&dc);
+            backend.set_background_mode(state.borrow().background_mode);
 
-            let x0 = 100;
+            let x0 = 200;
             let y0 = 100;
             let dx = 100;
             let dy = 100;
@@ -60,6 +75,14 @@ impl DrawingPanel {
                 for j in 0..3 {
                     let xi = x0 + 2 * i * dx;
                     let yi = y0 + 2 * j * dy;
+                    backend
+                        .draw_rect(
+                            (xi - dx / 2, yi - dy / 2),
+                            (xi + dx / 2, yi + dy / 2),
+                            &LIME_200,
+                            true,
+                        )
+                        .unwrap();
                     backend
                         .draw_rect(
                             (xi - dx / 2, yi - dy / 2),
@@ -99,26 +122,47 @@ const ID_TOOL_ROTATE_0: wx::Id = wx::ID_HIGHEST + 1;
 const ID_TOOL_ROTATE_90: wx::Id = wx::ID_HIGHEST + 2;
 const ID_TOOL_ROTATE_180: wx::Id = wx::ID_HIGHEST + 3;
 const ID_TOOL_ROTATE_270: wx::Id = wx::ID_HIGHEST + 4;
-
 fn main() {
     let _ = wxdragon::main(|_| {
         let frame = wx::Frame::builder()
             .with_title("Text anchor position example with Plotters")
-            .with_size(wx::Size::new(650, 750))
-            .with_position(wx::Point::new(100, 100))
             .build();
         frame.center_on_screen();
 
         let state = Rc::new(RefCell::new(State {
             text_transform: FontTransform::None,
+            background_mode: wx::BackgroundMode::Transparent,
         }));
-
-        let drawing_panel = DrawingPanel::new(&frame, state.clone());
 
         add_toolbar(&frame);
 
+        let toggle_background_button = wx::ToggleButton::builder(&frame)
+            .with_label("Toggle background")
+            .build();
+        toggle_background_button.set_value(true);
+
+        let drawing_panel = DrawingPanel::new(&frame, state.clone());
+
+        // Set up frame layout
+        let main_frame_sizer =
+            wx::BoxSizer::builder(wx::Orientation::Vertical).build();
+        main_frame_sizer.add(
+            &toggle_background_button,
+            0,
+            wx::SizerFlag::All | wx::SizerFlag::AlignLeft,
+            5,
+        );
+        main_frame_sizer.add(
+            &drawing_panel.panel,
+            1,
+            wx::SizerFlag::Expand | wx::SizerFlag::All,
+            0,
+        );
+        frame.set_sizer_and_fit(main_frame_sizer, true);
+
         // menu/toolbar events: change rotation
         {
+            let state = state.clone();
             let drawing_panel = *drawing_panel;
             frame.on_menu(move |event| match event.get_id() {
                 ID_TOOL_ROTATE_0 | ID_TOOL_ROTATE_90 | ID_TOOL_ROTATE_180
@@ -138,8 +182,17 @@ fn main() {
             });
         }
 
-        drawing_panel.refresh(true, None);
+        // Bind ToggleButton event
+        {
+            let state = state.clone();
+            let drawing_panel = *drawing_panel;
+            toggle_background_button.on_toggle(move |_event| {
+                state.borrow_mut().toggle_background_mode();
+                drawing_panel.refresh(true, None);
+            });
+        }
 
+        drawing_panel.refresh(true, None);
         frame.show(true);
     });
 }
