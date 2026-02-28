@@ -1,0 +1,7 @@
+plotters
+This crate includes examples from the plotters project (MIT).
+https://crates.io/crates/plotters
+
+wxdragon
+This crate includes examples from the wxdragon project (MIT, APACHE 2.0).
+https://crates.io/crates/wxdragon
