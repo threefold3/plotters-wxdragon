@@ -9,6 +9,7 @@ keywords = ["wxwidgets", "gui", "plotting", "drawing", "visualization"]
 homepage = "https://github.com/threefold3/plotters-wxdragon"
 include = ["/examples", "/src", "/tests", "LICENSE*", "NOTICE*", "README.md"]
 license = "Apache-2.0 OR MIT"
+readme = "README.md"
 repository = "https://github.com/threefold3/plotters-wxdragon"
 
 [dependencies]
