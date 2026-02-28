@@ -55,6 +55,7 @@ Examples of bitmaps produced with this backend:
 
    ```rust
    use plotters::prelude::*;
+   use plotters::style::text_anchor::{HPos, Pos, VPos};
    use plotters_wxdragon::WxBackend;
    use wxdragon::{self as wx, WindowEvents, WxWidget};
 
@@ -72,13 +73,17 @@ Examples of bitmaps produced with this backend:
                // Create a device context (wxdragon has several types)
                // and a plotters backend
                let dc = wx::AutoBufferedPaintDC::new(&panel);
-               let backend = WxBackend::new(&dc).into_drawing_area();
+               let mut backend = WxBackend::new(&dc);
 
                // Create a plotters plot as you would with any other backend
-               let style =
-                   TextStyle::from(("monospace", 32.0).into_font())
-                       .pos(Pos::new(HPos::Center, VPos::Center));
-               backend.draw_text("hello, world", &style, (400, 300)).unwrap();
+               backend
+                   .draw_rect((300, 250), (500, 350), &BLACK, false)
+                   .unwrap();
+               let style = TextStyle::from(("monospace", 32.0).into_font())
+                   .pos(Pos::new(HPos::Center, VPos::Center));
+               backend
+                   .draw_text("hello, world", &style, (400, 300))
+                   .unwrap();
 
                // Call present() when you are ready
                backend.present().expect("present");
@@ -105,7 +110,8 @@ Examples of bitmaps produced with this backend:
        let _ = wxdragon::main(|_| {
            let frame = wx::Frame::builder()
                .with_title("Getting started")
-               .with_size(wx::Size::new(800, 600))
+               // with this, wx produces a canvas of size 800 x 600
+               .with_size(wx::Size::new(852, 689))
                .build();
 
            let drawing_panel = DrawingPanel::new(&frame);
