@@ -1,3 +1,148 @@
+//! `plotters-wxdragon` is a backend for [Plotters], to draw plots in a GUI window
+//! managed by [wxDragon].
+//!
+//! [wxDragon] is a binding of wxWidgets for rust. wxWidgets is a cross-platform
+//! GUI library toolkit for desktop applications, that uses the native GUI toolkit
+//! on Windows, macOS, and Linux.
+//!
+//! [Plotters] is a Rust drawing library focusing on data plotting for both WASM
+//! and native applications.
+//!
+//! [Plotters]: https://crates.io/crates/plotters
+//! [wxDragon]: https://crates.io/crates/wxdragon
+//!
+//! ## Getting started
+//!
+//! ### Quick start
+//!
+//! 1. Follow [wxDragon] instructions to install the `wxdragon` crate. You will
+//!    need the wxWidgets library for your OS so be sure to follow the
+//!    instructions.
+//!
+//! 2. Clone this repository and run the `x2` plotting example to check that it
+//!    works for you.
+//!
+//!    ```bash
+//!    git clone https://github.com/dev-threefold/plotters-wxdragon.git
+//!    cd plotters-wxdragon
+//!    cargo run --example x2
+//!    ```
+//!
+//!    This will open a new window displaying a simple `y=x^2` plot.
+//!
+//! ### Integrating with a project
+//!
+//! 1. Add the following to your `Cargo.toml` file:
+//!
+//!    ```toml
+//!    [dependencies]
+//!    wxdragon = "0.9"
+//!    plotters = "0.3"
+//!    plotters-wxdragon = "0.1"
+//!    ```
+//!
+//! 2. Create an app with a `wxdragon::Panel`, and use the panel's `on_paint`
+//!    handler to create a new `wxdragon::AutoBufferedPaintDC` (device context)
+//!    each time, wrap it in a `WxBackend` and then draw on it.
+//!
+//!    ```rust
+//!    use plotters::prelude::*;
+//!    use plotters::style::text_anchor::{HPos, Pos, VPos};
+//!    use plotters_wxdragon::WxBackend;
+//!    use wxdragon::{self as wx, WindowEvents, WxWidget};
+//!
+//!    struct DrawingPanel {
+//!        panel: wx::Panel,
+//!    }
+//!
+//!    impl DrawingPanel {
+//!        fn new(parent: &wx::Frame) -> Self {
+//!            let panel = wx::PanelBuilder::new(parent).build();
+//!            panel.set_background_style(wx::BackgroundStyle::Paint);
+//!
+//!            // Register the paint handler with a move closure
+//!            panel.on_paint(move |_event| {
+//!                // Create a device context (wxdragon has several types)
+//!                // and a plotters backend
+//!                let dc = wx::AutoBufferedPaintDC::new(&panel);
+//!                let mut backend = WxBackend::new(&dc);
+//!
+//!                // Create a plotters plot as you would with any other backend
+//!                backend
+//!                    .draw_rect((300, 250), (500, 350), &BLACK, false)
+//!                    .unwrap();
+//!                let style = TextStyle::from(("monospace", 32.0).into_font())
+//!                    .pos(Pos::new(HPos::Center, VPos::Center));
+//!                backend
+//!                    .draw_text("hello, world", &style, (400, 300))
+//!                    .unwrap();
+//!
+//!                // Call present() when you are ready
+//!                backend.present().expect("present");
+//!            });
+//!
+//!            // Handle SIZE events to refresh when the window size changes
+//!            panel.on_size(move |_event| {
+//!                panel.refresh(true, None);
+//!            });
+//!
+//!            Self { panel }
+//!        }
+//!    }
+//!
+//!    impl std::ops::Deref for DrawingPanel {
+//!        type Target = wx::Panel;
+//!
+//!        fn deref(&self) -> &Self::Target {
+//!            &self.panel
+//!        }
+//!    }
+//!
+//!    fn main() {
+//!        let _ = wxdragon::main(|_| {
+//!            let frame = wx::Frame::builder()
+//!                .with_title("Getting started")
+//!                // with this, wx produces a canvas of size 800 x 600
+//!                .with_size(wx::Size::new(852, 689))
+//!                .build();
+//!
+//!            let drawing_panel = DrawingPanel::new(&frame);
+//!
+//!            // Initial paint
+//!            drawing_panel.refresh(true, None);
+//!
+//!            frame.show(true);
+//!        });
+//!    }
+//!    ```
+//!
+//!    You can find more details in the examples for how to integrate a plot in
+//!    your wxWidgets application:
+//!    + `x2`: simple `y=x^2` plot in a wxWidgets frame
+//!    + `text`: a single window that shows various text orientations and a
+//!      toolbar that can modify application state
+//!
+//!    See also the existing tests, which illustrate that most existing
+//!    plotters examples work without change. In these tests we write to to an
+//!    in-memory device context instead of a device context linked to a
+//!    `Panel`, and compare to a reference png images to ensure non-regression.
+//!
+//! ## How this works
+//!
+//! This crate implements a backend for [Plotters]. It uses the existing drawing
+//! context of wxWidgets, and maps plotters drawing primitives to corresponding
+//! calls fo the wxWidgets API.
+//!
+//! See also [`plotters-backend`] for reference on implementing a backend for
+//! plotters.
+//!
+//! [`plotters-backend`]: https://docs.rs/plotters-backend/latest/plotters_backend/
+//!
+//! ## License
+//!
+//! This project is dual-licensed under [Apache 2.0](./LICENSE-APACHE) and
+//! [`MIT`](./LICENSE-MIT) terms.
+
 use plotters_backend::{
     BackendColor, DrawingBackend, FontFamily, FontStyle, FontTransform,
     text_anchor::{HPos, Pos, VPos},
@@ -6,9 +151,86 @@ use wxdragon::{self as wx, BackgroundMode, DeviceContext};
 
 /// Bridge struct to allow plotters to plot on a [`wxdragon::DeviceContext`].
 ///
-/// **FIXME** explain how to use.
+/// This backend works with any [`wxdragon::DeviceContext`] that implements the
+/// required drawing primitives. For example:
+/// - [`wxdragon::AutoBufferedPaintDC`] for drawing on a [`wxdragon::Panel`]
+///   in a GUI application.
+/// - [`wxdragon::MemoryDC`] for off-screen drawing to a [`wxdragon::Bitmap`].
 ///
-/// **FIXME** explain which kind of [`DeviceContext`] this can work with.
+/// # How to use
+///
+/// Create an app with a `wxdragon::Panel`, and use the panel's `on_paint`
+/// handler to create a new `wxdragon::AutoBufferedPaintDC` (device context)
+/// each time, wrap it in a `WxBackend` and then draw on it.
+///
+/// ```no_run
+/// use plotters::prelude::*;
+/// use plotters::style::text_anchor::{HPos, Pos, VPos};
+/// use plotters_wxdragon::WxBackend;
+/// use wxdragon::{self as wx, WindowEvents, WxWidget};
+///
+/// struct DrawingPanel {
+///     panel: wx::Panel,
+/// }
+///
+/// impl DrawingPanel {
+///     fn new(parent: &wx::Frame) -> Self {
+///         let panel = wx::PanelBuilder::new(parent).build();
+///         panel.set_background_style(wx::BackgroundStyle::Paint);
+///
+///         // Register the paint handler with a move closure
+///         panel.on_paint(move |_event| {
+///             // Create a device context (wxdragon has several types)
+///             // and a plotters backend
+///             let dc = wx::AutoBufferedPaintDC::new(&panel);
+///             let mut backend = WxBackend::new(&dc);
+///
+///             // Create a plotters plot as you would with any other backend
+///             backend
+///                 .draw_rect((300, 250), (500, 350), &BLACK, false)
+///                 .unwrap();
+///             let style = TextStyle::from(("monospace", 32.0).into_font())
+///                 .pos(Pos::new(HPos::Center, VPos::Center));
+///             backend
+///                 .draw_text("hello, world", &style, (400, 300))
+///                 .unwrap();
+///
+///             // Call present() when you are ready
+///             backend.present().expect("present");
+///         });
+///
+///         // Handle SIZE events to refresh when the window size changes
+///         panel.on_size(move |_event| {
+///             panel.refresh(true, None);
+///         });
+///
+///         Self { panel }
+///     }
+/// }
+///
+/// impl std::ops::Deref for DrawingPanel {
+///     type Target = wx::Panel;
+///
+///     fn deref(&self) -> &Self::Target {
+///         &self.panel
+///     }
+/// }
+///
+/// let _ = wxdragon::main(|_| {
+///     let frame = wx::Frame::builder()
+///         .with_title("Getting started")
+///         // with this, wx produces a canvas of size 800 x 600
+///         .with_size(wx::Size::new(852, 689))
+///         .build();
+///
+///     let drawing_panel = DrawingPanel::new(&frame);
+///
+///     // Initial paint
+///     drawing_panel.refresh(true, None);
+///
+///     frame.show(true);
+/// });
+/// ```
 pub struct WxBackend<'context, C>
 where
     C: DeviceContext,
@@ -32,12 +254,12 @@ where
         backend
     }
 
-    /// Clear the device context
+    /// Clear the device context.
     pub fn clear(&self) {
         self.context.clear();
     }
 
-    /// Set the background color of the device context
+    /// Set the background color of the device context.
     ///
     /// This setting affects the global background, and also the fill color of
     /// text labels.
@@ -45,7 +267,7 @@ where
         self.context.set_background(color);
     }
 
-    /// Set the background mode of the device context
+    /// Set the background mode of the device context.
     ///
     /// This settings affects the fill color of text labels. Use
     /// [`BackgroundMode::Solid`] if you want text labels to have a solid
@@ -55,7 +277,7 @@ where
         self.context.set_background_mode(mode);
     }
 
-    /// Set pen from plotters style
+    /// Set pen from plotters style.
     fn set_pen_style<S: plotters_backend::BackendStyle>(&self, style: &S) {
         let color = convert_color(style.color());
         let width = style.stroke_width() as i32;
@@ -64,7 +286,7 @@ where
         self.context.set_pen(color, width, style);
     }
 
-    /// Set brush from plotters style
+    /// Set brush from plotters style.
     fn set_brush_style(
         &self,
         fill: bool,
@@ -78,7 +300,7 @@ where
         self.context.set_brush(color, style);
     }
 
-    /// Sets the font style from plotters BackendTextStyle
+    /// Sets the font style from plotters BackendTextStyle.
     ///
     /// Note: text background information is not present in
     /// plotters_backend::BackendTextStyle, but it can be controlled using
@@ -335,7 +557,7 @@ where
     }
 }
 
-/// Represents an error when drawing on a [`DrawingPanel`].
+/// Represents an error when drawing on a [`WxBackend`].
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
 pub struct Error(#[from] ErrorInner);
