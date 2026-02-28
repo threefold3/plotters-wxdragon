@@ -6,7 +6,7 @@ mod test_utils;
 
 use plotters::prelude::*;
 use plotters_wxdragon::WxBackend;
-use wxdragon::DeviceContext;
+use wxdragon::{self as wx, DeviceContext};
 
 use test_utils::run_plotters_image_test;
 
@@ -16,6 +16,7 @@ fn test_chart() -> anyhow::Result<()> {
 }
 
 fn draw_chart<C: DeviceContext>(backend: WxBackend<C>) -> anyhow::Result<()> {
+    backend.set_background_mode(wx::BackgroundMode::Solid);
     let root_area = backend.into_drawing_area();
 
     root_area.fill(&WHITE)?;

@@ -2,7 +2,7 @@ use plotters_backend::{
     BackendColor, DrawingBackend, FontFamily, FontStyle, FontTransform,
     text_anchor::{HPos, Pos, VPos},
 };
-use wxdragon::{self as wx, DeviceContext};
+use wxdragon::{self as wx, BackgroundMode, DeviceContext};
 
 /// Bridge struct to allow plotters to plot on a [`wxdragon::DeviceContext`].
 ///
@@ -20,11 +20,39 @@ impl<'context, C> WxBackend<'context, C>
 where
     C: DeviceContext,
 {
+    /// Creates a new `WxBackend` from a `wxdragon::DeviceContext`.
+    ///
+    /// The `DeviceContext` is initialized with a white background color and
+    /// transparent background mode.
     pub fn new(context: &'context C) -> WxBackend<'context, C> {
-        context.set_background(WHITE);
-        context.set_background_mode(wx::BackgroundMode::Solid);
-        context.clear();
-        WxBackend { context }
+        let backend = WxBackend { context };
+        backend.set_background_color(wx::Colour::rgb(255, 255, 255));
+        backend.set_background_mode(wx::BackgroundMode::Transparent);
+        backend.clear();
+        backend
+    }
+
+    /// Clear the device context
+    pub fn clear(&self) {
+        self.context.clear();
+    }
+
+    /// Set the background color of the device context
+    ///
+    /// This setting affects the global background, and also the fill color of
+    /// text labels.
+    pub fn set_background_color(&self, color: wx::Colour) {
+        self.context.set_background(color);
+    }
+
+    /// Set the background mode of the device context
+    ///
+    /// This settings affects the fill color of text labels. Use
+    /// [`BackgroundMode::Solid`] if you want text labels to have a solid
+    /// background, otherwise leave the default
+    /// [`BackgroundMode::Transparent`].
+    pub fn set_background_mode(&self, mode: BackgroundMode) {
+        self.context.set_background_mode(mode);
     }
 
     /// Set pen from plotters style
@@ -51,11 +79,17 @@ where
     }
 
     /// Sets the font style from plotters BackendTextStyle
+    ///
+    /// Note: text background information is not present in
+    /// plotters_backend::BackendTextStyle, but it can be controlled using
+    /// [`WxBackend::set_background_mode`] and
+    /// [`WxBackend::set_background_color`]
     fn set_font_style<TStyle: plotters_backend::BackendTextStyle>(
         &self,
         style: &TStyle,
     ) -> Result<(), ErrorInner> {
-        self.context.set_text_background(WHITE); // FIXME
+        self.context
+            .set_text_background(self.context.get_background());
         let color = convert_color(style.color());
         self.context.set_text_foreground(color);
         // FIXME: There is a discrepancy with font size compared to the
@@ -314,5 +348,3 @@ enum ErrorInner {
     #[error("failed to create bitmap")]
     CreateBitmap,
 }
-
-const WHITE: wx::Colour = wx::Colour::rgb(255, 255, 255);
