@@ -31,7 +31,7 @@ Examples of bitmaps produced with this backend:
    works for you.
 
    ```bash
-   git clone https://github.com/dev-threefold/plotters-wxdragon.git
+   git clone https://github.com/threefold3/plotters-wxdragon.git
    cd plotters-wxdragon
    cargo run --example x2
    ```
