@@ -13,7 +13,11 @@ and native applications.
 [Plotters]: https://crates.io/crates/plotters
 [wxDragon]: https://crates.io/crates/wxdragon
 
-FIXME: add links to images of examples
+Examples of bitmaps produced with this backend:
+
+[![3D Plot](./tests/thumbnails/3d_plot.png)](./tests/3d_plot.png)
+[![Chart Plot](./tests/thumbnails/chart.png)](./tests/chart.png)
+[![Mandelbrot Plot](./tests/thumbnails/mandelbrot.png)](./tests/mandelbrot.png)
 
 ## Getting started
 
