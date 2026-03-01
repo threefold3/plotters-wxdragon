@@ -57,6 +57,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # dependencies for wxWidgets (see installation instructions and github
+      # workflow of https://github.com/allendang/wxdragon)
+      - name: Install deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libpng-dev libjpeg-dev libgl1-mesa-dev libglu1-mesa-dev libxkbcommon-dev libexpat1-dev libtiff-dev libwebkit2gtk-4.1-dev libxtst-dev
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
