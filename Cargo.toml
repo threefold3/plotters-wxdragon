@@ -5,6 +5,7 @@ edition = "2024"
 categories = ["graphics", "gui", "visualization"]
 description = """Plotters backend for wxDragon, allowing drawing Plotters
 graphs on wxWidgets device contexts."""
+documentation = "https://docs.rs/plotters-wxdragon"
 keywords = ["wxwidgets", "gui", "plotting", "drawing", "visualization"]
 homepage = "https://github.com/threefold3/plotters-wxdragon"
 include = ["/examples", "/src", "/tests", "LICENSE*", "NOTICE*", "README.md"]
