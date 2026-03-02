@@ -78,8 +78,6 @@ where
             if expected == image::DynamicImage::ImageRgba8(image.clone()) {
                 Ok(())
             } else {
-                // regenerate expected image by uncommenting this and
-                // commenting the non-regression part
                 image
                     .save(&actual_png)
                     .context("failed to save {actual_png}")?;
