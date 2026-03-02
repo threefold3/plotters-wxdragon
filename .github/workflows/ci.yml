@@ -43,6 +43,9 @@ jobs:
       - name: build
         run: cargo build
 
+        # skip main doc test because it opens a window
+      - run: sed -i 's/```rust/```no_run/g' src/lib.rs
+
       - name: tests
         run: xvfb-run cargo test --all-features --verbose
 
