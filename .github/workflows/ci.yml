@@ -45,9 +45,6 @@ jobs:
       - name: build
         run: cargo build
 
-        # skip main doc test because it opens a window
-      - run: sed -i 's/```rust/```no_run/g' src/lib.rs
-
       - name: clippy
         run: cargo clippy --all-features -- -D warnings
 
@@ -57,7 +54,9 @@ jobs:
       - name: headless tests
         uses: coactions/setup-xvfb@v1
         with:
-          run: cargo test --all-features --verbose
+          # skip main doc test because it opens a window
+          # run: cargo test --all-features --verbose
+          run: cargo test --all-features --verbose --lib --tests
 
   docs:
     name: Documentation
