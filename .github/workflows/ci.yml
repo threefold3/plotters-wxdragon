@@ -22,6 +22,8 @@ jobs:
     steps:
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/checkout@v5
+        with:
+          - lfs: true
       - run: rustup component add rustfmt clippy
 
       # dependencies for wxWidgets (see installation instructions and github
