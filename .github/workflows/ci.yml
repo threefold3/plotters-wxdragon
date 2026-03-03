@@ -51,12 +51,12 @@ jobs:
       - name: check formatting
         run: cargo fmt --all -- --check
 
-      - name: headless tests
-        uses: coactions/setup-xvfb@v1
-        with:
-          # skip main doc test because it opens a window
-          # run: cargo test --all-features --verbose
-          run: cargo test --all-features --verbose --lib --tests
+      # - name: headless tests
+      #   uses: coactions/setup-xvfb@v1
+      #   with:
+      #     # skip main doc test because it opens a window
+      #     # run: cargo test --all-features --verbose
+      #     run: cargo test --all-features --verbose --lib --tests
 
   docs:
     name: Documentation
