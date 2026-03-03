@@ -98,22 +98,20 @@
 //!        }
 //!    }
 //!
-//!    fn main() {
-//!        let _ = wxdragon::main(|_| {
-//!            let frame = wx::Frame::builder()
-//!                .with_title("Getting started")
-//!                // with this, wx produces a canvas of size 800 x 600
-//!                .with_size(wx::Size::new(852, 689))
-//!                .build();
+//!    let _ = wxdragon::main(|_| {
+//!        let frame = wx::Frame::builder()
+//!            .with_title("Getting started")
+//!            // with this, wx produces a canvas of size 800 x 600
+//!            .with_size(wx::Size::new(852, 689))
+//!            .build();
 //!
-//!            let drawing_panel = DrawingPanel::new(&frame);
+//!        let drawing_panel = DrawingPanel::new(&frame);
 //!
-//!            // Initial paint
-//!            drawing_panel.refresh(true, None);
+//!        // Initial paint
+//!        drawing_panel.refresh(true, None);
 //!
-//!            frame.show(true);
-//!        });
-//!    }
+//!        frame.show(true);
+//!    });
 //!    ```
 //!
 //!    You can find more details in the examples for how to integrate a plot in
