@@ -15,7 +15,7 @@ use test_utils::run_plotters_image_test;
 
 #[test]
 fn test_mandelbrot() -> Result<()> {
-    run_plotters_image_test(800, 600, "tests/mandelbrot", draw_mandelbrot)
+    run_plotters_image_test(800, 600, "tests/mandelbrot.png", draw_mandelbrot)
 }
 
 fn draw_mandelbrot<C: DeviceContext>(backend: WxBackend<C>) -> Result<()> {

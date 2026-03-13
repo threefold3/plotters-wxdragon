@@ -12,7 +12,7 @@ use test_utils::run_plotters_image_test;
 
 #[test]
 fn test_chart() -> anyhow::Result<()> {
-    run_plotters_image_test(1024, 768, "tests/chart", draw_chart)
+    run_plotters_image_test(1024, 768, "tests/chart.png", draw_chart)
 }
 
 fn draw_chart<C: DeviceContext>(backend: WxBackend<C>) -> anyhow::Result<()> {
