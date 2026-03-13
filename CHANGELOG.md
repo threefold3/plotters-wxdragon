@@ -5,6 +5,15 @@ The format of this changelog is based on
 
 ## [Unreleased]
 
+## [0.1.1]
+
+### Fixed
+
+* Add documentation metadata for docs.rs
+
+
+## [0.1.0]
+
 ### Added
 
 * Create a struct `WxBackend` to bridge `wxdragon::DeviceContext` for use with
@@ -15,3 +24,7 @@ The format of this changelog is based on
   the plots.
 * Add non-regression tests that write to an in-memory device context and
   compare with a reference png image.
+
+[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/olivierlacan/keep-a-changelog/releases/tag/v0.1.0
