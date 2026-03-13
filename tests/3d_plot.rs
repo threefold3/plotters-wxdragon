@@ -10,7 +10,7 @@ use test_utils::run_plotters_image_test;
 
 #[test]
 fn test_3d_plot() -> anyhow::Result<()> {
-    run_plotters_image_test(1024, 768, "tests/3d_plot", draw_3d_plot)
+    run_plotters_image_test(1024, 768, "tests/3d_plot.png", draw_3d_plot)
 }
 
 fn draw_3d_plot<C: DeviceContext>(backend: WxBackend<C>) -> anyhow::Result<()> {

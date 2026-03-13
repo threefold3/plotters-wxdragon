@@ -2,6 +2,8 @@
 
 use std::fs;
 use std::io;
+use std::path::Path;
+use std::path::PathBuf;
 use std::process;
 
 use anyhow::{Context, Result};
@@ -14,15 +16,18 @@ use wxdragon::{self as wx};
 ///
 /// This function sets up a wxWidgets `MemoryDC`, draws on it using the
 /// provided `draw_fn`, then compares the resulting bitmap with a reference
-/// image loaded from `{path_root}.png`. If the images do not match, the test
+/// image loaded from `{reference_png}`. If the images do not match, the test
 /// will fail.
+///
+/// In case of image mismatch, the actual producted image i saved in
+/// subdirectory `/outputs/` of the directory containing `{reference_png}`.
 ///
 /// # Arguments
 ///
 /// * `width`: width of the drawing area.
 /// * `height`: height of the drawing area.
-/// * `path_root`: used to build the path `"{path_root}.png"` to the reference
-///   PNG image for non-regression comparison.
+/// * `reference_png`: path to the reference PNG image for non-regression
+///   comparison.
 /// * `draw_fn`: closure that performs the drawing operations.
 ///
 /// # Returns
@@ -33,14 +38,26 @@ use wxdragon::{self as wx};
 pub fn run_plotters_image_test<F>(
     width: u32,
     height: u32,
-    path_root: &str,
+    reference_png: impl Into<PathBuf>,
     draw_fn: F,
 ) -> Result<()>
 where
     F: FnOnce(WxBackend<wx::MemoryDC>) -> Result<()> + Send + 'static,
 {
-    let reference_png = format!("{path_root}.png");
-    let actual_png = format!("{path_root}_actual.png"); // saved if mismatch
+    let reference_png = reference_png.into();
+    let (output_dir, actual_png) = {
+        let output_dir = reference_png
+            .parent()
+            .unwrap_or_else(|| Path::new(""))
+            .join("outputs");
+        let actual_png = output_dir.join(
+            reference_png
+                .file_name()
+                .context("Invalid reference_png path: missing filename")?,
+        );
+        (output_dir, actual_png)
+    };
+
     let _ = wx::main(move |_| {
         let result = (|| -> Result<()> {
             // setup the backend with an empty bitmap
@@ -69,25 +86,36 @@ where
             let expected = image::load(
                 io::BufReader::new(
                     fs::File::open(&reference_png).with_context(|| {
-                        format!("failed to open {reference_png}")
+                        format!("failed to open {}", reference_png.display())
                     })?,
                 ),
                 image::ImageFormat::Png,
             )
-            .with_context(|| "failed to load {reference_png}")?;
+            .with_context(|| {
+                format!("failed to load {}", reference_png.display())
+            })?;
+
+            // save actual image for later comparison in case of failure
+            fs::create_dir_all(&output_dir).context(format!(
+                "failed to create directory {}",
+                output_dir.display()
+            ))?;
+            image
+                .save(&actual_png)
+                .context(format!("failed to save {}", actual_png.display()))?;
+
             if expected == image::DynamicImage::ImageRgba8(image.clone()) {
                 Ok(())
             } else {
-                image
-                    .save(&actual_png)
-                    .context("failed to save {actual_png}")?;
                 let message = format!(
                     "ERROR: image mismatch.
 Compare the following two files manually, then \
 update the reference image if needed.
-  reference image: {reference_png}
-  actual image   : {actual_png}
-"
+  reference image: {}
+  actual image   : {}
+",
+                    reference_png.display(),
+                    actual_png.display()
                 );
                 anyhow::bail!(message)
             }

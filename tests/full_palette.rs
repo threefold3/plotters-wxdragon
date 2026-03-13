@@ -12,7 +12,12 @@ use test_utils::run_plotters_image_test;
 
 #[test]
 fn test_full_palette() -> anyhow::Result<()> {
-    run_plotters_image_test(2000, 850, "tests/full_palette", draw_full_palette)
+    run_plotters_image_test(
+        2000,
+        850,
+        "tests/full_palette.png",
+        draw_full_palette,
+    )
 }
 fn draw_full_palette<C: DeviceContext>(
     backend: WxBackend<C>,
