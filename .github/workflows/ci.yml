@@ -51,12 +51,28 @@ jobs:
       - name: check formatting
         run: cargo fmt --all -- --check
 
-      # - name: headless tests
-      #   uses: coactions/setup-xvfb@v1
-      #   with:
-      #     # skip main doc test because it opens a window
-      #     # run: cargo test --all-features --verbose
-      #     run: cargo test --all-features --verbose --lib --tests
+      - name: headless tests
+        if: runner.os == 'Linux'
+        uses: coactions/setup-xvfb@v1
+        with:
+          # skip main doc test because it opens a window
+          # run: cargo test --all-features --verbose
+          run: cargo test --all-features --verbose --lib --tests
+
+      - name: headless tests
+        if: runner.os == 'Windows'
+        # skip main doc test because it opens a window
+        # run: cargo test --all-features --verbose
+        run: cargo test --all-features --verbose --lib --tests
+
+      - name: upload test outputs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-outputs
+          path: |
+            tests/outputs/
+          retention-days: 7
 
   docs:
     name: Documentation
